@@ -1,101 +1,205 @@
+"use client";
+
+import { getDataFromAPI, sendDataToAPI } from "@/api";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import editIcon from "@/assets/edit-icon.svg";
+import deleteIcon from "@/assets/delete-icon.svg";
+import Swal from "sweetalert2";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [rows, setRows] = useState([]);
+  const [page, setPage] = useState("list");
+  const [employeeName, setEmployeeName] = useState("");
+  const [employeeAge, setEmployeeAge] = useState(0);
+  const [employeeSalary, setEmployeeSalary] = useState(0);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  interface EmployeePropsType {
+    id: number;
+    employee_name: string;
+    employee_salary: number;
+    employee_age: number;
+  }
+
+  const getData = () => {
+    getDataFromAPI("employees")
+      .then((res) => setRows(res.data))
+      .catch((err) => console.log({ err }));
+  };
+
+  const createData = () => {
+    if (employeeAge && employeeName && employeeSalary)
+      sendDataToAPI(
+        "create",
+        {
+          employee_name: employeeName,
+          employee_age: employeeAge,
+          employee_salary: employeeSalary,
+        },
+        "POST"
+      )
+        .then((res) => {
+          console.log({ res });
+          if (res.status === "success") {
+            setEmployeeName("");
+            setEmployeeAge(0);
+            setEmployeeSalary(0);
+            handleSucces();
+          }
+        })
+        .catch((err) => console.log({ err }));
+  };
+
+  useEffect(() => getData(), []);
+
+  const handleSucces = () => {
+    Swal.fire({
+      title: "Good job!",
+      text: "You clicked the button!",
+      icon: "success",
+    });
+  };
+
+  return (
+    <div className="flex flex-row">
+      <div className="flex-none w-64 px-16 py-16">
+        <label
+          className="text-xl font-bold cursor-pointer"
+          onClick={() => setPage("list")}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Employees
+        </label>
+      </div>
+      <div className="bg-gray-50 p-16 min-h-screen text-gray-800 flex-auto">
+        {page === "list" ? (
+          <>
+            <div className="mb-8">
+              <button
+                className="bg-blue-600 text-white px-10 py-2 rounded-md"
+                onClick={() => setPage("create")}
+              >
+                Create
+              </button>
+            </div>
+            <table className="table-auto w-full text-left">
+              <thead>
+                <tr className=" border-b-2">
+                  <th className="pb-2">#</th>
+                  <th>Name</th>
+                  <th>Salary</th>
+                  <th>Age</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((item: EmployeePropsType, index) => (
+                  <tr key={index} className="border-b">
+                    <td className="py-6">{item.id}</td>
+                    <td>{item.employee_name}</td>
+                    <td>{item.employee_salary}</td>
+                    <td>{item.employee_age}</td>
+                    <td>
+                      <div className="flex flex-row">
+                        <button className="bg-blue-300 p-2 rounded-md mx-2">
+                          <Image src={editIcon} alt="" />
+                        </button>
+                        <button className="bg-red-400 p-2 rounded-md mx-2">
+                          <Image src={deleteIcon} alt="" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : page === "create" ? (
+          <>
+            <div className="mb-4">
+              <div className="mb-1">
+                <label>Name</label>
+              </div>
+              <div>
+                <input
+                  placeholder="Name"
+                  className="py-1 px-2 border border-gray-400 rounded-md w-96"
+                  value={employeeName}
+                  onChange={(e) => setEmployeeName(e.target.value)}
+                />
+              </div>
+              <div className="mt-0.5">
+                <label
+                  className={`text-sm px-2 py-1 rounded-sm ${
+                    employeeName ? "bg-green-600" : "bg-red-400"
+                  } text-white`}
+                >
+                  {employeeName ? "Looks good" : "Name is required"}
+                </label>
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="mb-1">
+                <label>Age</label>
+              </div>
+              <div>
+                <input
+                  placeholder="Age"
+                  type="number"
+                  className="py-1 px-2 border border-gray-400 rounded-md"
+                  value={employeeAge}
+                  onChange={(e) => setEmployeeAge(Number(e.target.value))}
+                />
+              </div>
+              <div className="mt-0.5">
+                <label
+                  className={`text-sm px-2 py-1 rounded-sm ${
+                    employeeAge ? "bg-green-600" : "bg-red-400"
+                  } text-white`}
+                >
+                  {employeeAge ? "Looks good" : "Age is required"}
+                </label>
+              </div>
+            </div>
+            <div className="mb-4">
+              <div className="mb-1">
+                <label>Salary</label>
+              </div>
+              <div>
+                <input
+                  placeholder="Salary"
+                  type="number"
+                  className="py-1 px-2 border border-gray-400 rounded-md w-96"
+                  value={employeeSalary}
+                  onChange={(e) => setEmployeeSalary(Number(e.target.value))}
+                ></input>
+              </div>
+              <div className="mt-0.5">
+                <label
+                  className={`text-sm px-2 py-1 rounded-sm ${
+                    employeeSalary ? "bg-green-600" : "bg-red-400"
+                  } text-white`}
+                >
+                  {employeeSalary ? "Looks good" : "Salary is required"}
+                </label>
+              </div>
+            </div>
+            <div className="my-12">
+              <button
+                className={`${
+                  employeeName && employeeAge && employeeSalary
+                    ? "bg-blue-500"
+                    : "bg-gray-400"
+                } text-white px-8 py-2 rounded-md`}
+                onClick={createData}
+              >
+                Save
+              </button>
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
+      </div>
     </div>
   );
 }
